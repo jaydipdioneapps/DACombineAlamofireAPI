@@ -138,14 +138,14 @@ extension DACombineAlamofireAPI {
             guard let target = target else { return }
             
             self.target = nil
-            request.responseJSON { response in
+            request.responseData { response in
                 if response.response?.statusCode == DAHTTPStatusCode.unauthorized.rawValue {
                     target.receive(completion: .failure(DAError.unauthorized))
                     return
                 }
                 switch response.result {
                 case .success :
-                    _ = target.receive(response.data ?? Data())
+                    _ = target.receive(response.value)
                     target.receive(completion: .finished)
                 case .failure(let error):
                     if error.isSessionTaskError {
