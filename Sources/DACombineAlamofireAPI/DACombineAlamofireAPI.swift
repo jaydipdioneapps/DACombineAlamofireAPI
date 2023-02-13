@@ -145,7 +145,7 @@ extension DACombineAlamofireAPI {
                 }
                 switch response.result {
                 case .success :
-                    _ = target.receive(response.value)
+                    _ = target.receive(response.value!)
                     target.receive(completion: .finished)
                 case .failure(let error):
                     if error.isSessionTaskError {
