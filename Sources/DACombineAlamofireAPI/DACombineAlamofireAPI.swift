@@ -139,8 +139,8 @@ extension DACombineAlamofireAPI {
             
             self.target = nil
             request.responseJSON { response in
-                if response.response?.statusCode == RRHTTPStatusCode.unauthorized.rawValue {
-                    target.receive(completion: .failure(RRError.unauthorized))
+                if response.response?.statusCode == DAHTTPStatusCode.unauthorized.rawValue {
+                    target.receive(completion: .failure(DAError.unauthorized))
                     return
                 }
                 switch response.result {
@@ -149,7 +149,7 @@ extension DACombineAlamofireAPI {
                     target.receive(completion: .finished)
                 case .failure(let error):
                     if error.isSessionTaskError {
-                        target.receive(completion: .failure(RRError.noInternetConnection))
+                        target.receive(completion: .failure(DAError.noInternetConnection))
                     } else {
                         target.receive(completion: .failure(error))
                     }
