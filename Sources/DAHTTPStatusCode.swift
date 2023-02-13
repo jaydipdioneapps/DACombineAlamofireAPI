@@ -1,8 +1,6 @@
 //
-//  RRHTTPStatusCode.swift
-//  RRCombineAlamofireAPI
-//
-//  Created by Rahul Mayani on 12/05/21.
+//  DAHTTPStatusCode.swift
+//  DACombineAlamofireAPI
 //
 
 import Foundation
