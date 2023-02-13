@@ -5,7 +5,7 @@ import Alamofire
 final public class DACombineAlamofireAPI: Publisher {
     
     /// `Singleton` variable of API class
-    public static let shared = RRCombineAlamofireAPI()
+    public static let shared = DACombineAlamofireAPI()
     
     /// It's private for subclassing
     private init() {}
