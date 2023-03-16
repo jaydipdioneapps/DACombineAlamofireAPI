@@ -143,6 +143,10 @@ extension DACombineAlamofireAPI {
                     target.receive(completion: .failure(DAError.unauthorized))
                     return
                 }
+                if response.response?.statusCode == DAHTTPStatusCode.internalServerError.rawValue {
+                    target.receive(completion: .failure(DAError.internalServerError))
+                    return
+                }
                 switch response.result {
                 case .success :
                     _ = target.receive(response.value!)
