@@ -39,13 +39,3 @@ public enum DAError: LocalizedError {
         }
     }
 }
-
-public class DAErrorModel {
-    let status : DAError
-    let message : String
-    
-    init(status: DAError, message: String) {
-        self.status = status
-        self.message = message
-    }
-}

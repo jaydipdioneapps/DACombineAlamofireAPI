@@ -140,7 +140,7 @@ extension DACombineAlamofireAPI {
             self.target = nil
             request.responseData { response in
                 if response.response?.statusCode == DAHTTPStatusCode.unauthorized.rawValue {
-                    target.receive(completion: .failure(DAErrorModel(status: DAError.unauthorized, message: response.error?.localizedDescription)))
+                    target.receive(completion: .failure(DAError.unauthorized))
                     return
                 }
                 if response.response?.statusCode == DAHTTPStatusCode.internalServerError.rawValue {
