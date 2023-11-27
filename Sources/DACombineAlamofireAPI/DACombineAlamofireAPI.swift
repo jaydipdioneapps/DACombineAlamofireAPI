@@ -14,7 +14,7 @@ final public class DACombineAlamofireAPI: Publisher {
     
     /// The response of data type.
     public typealias Output = Data
-    public typealias Failure = Error
+    public typealias Failure = DAErrorModel
     
     // MARK: - Properties
     
@@ -140,37 +140,37 @@ extension DACombineAlamofireAPI {
             self.target = nil
             request.responseData { response in
                 if response.response?.statusCode == DAHTTPStatusCode.unauthorized.rawValue {
-                    target.receive(completion: .failure(DAError.unauthorized))
+                    target.receive(completion: .failure(DAErrorModel(status: DAError.unauthorized, message: response.error?.localizedDescription ?? "")))
                     return
                 }
-                if response.response?.statusCode == DAHTTPStatusCode.internalServerError.rawValue {
-                    target.receive(completion: .failure(DAError.internalServerError))
-                    return
-                }
-                if response.response?.statusCode == DAHTTPStatusCode.badRequest.rawValue {
-                    target.receive(completion: .failure(DAError.badRequest))
-                    return
-                }
-                if response.response?.statusCode == DAHTTPStatusCode.forbidden.rawValue {
-                    target.receive(completion: .failure(DAError.forbidden))
-                    return
-                }
-                if response.response?.statusCode == DAHTTPStatusCode.notFound.rawValue {
-                    target.receive(completion: .failure(DAError.notFound))
-                    return
-                }
-                if response.response?.statusCode == DAHTTPStatusCode.badGateway.rawValue {
-                    target.receive(completion: .failure(DAError.badGateway))
-                    return
-                }
-                if response.response?.statusCode == DAHTTPStatusCode.serviceUnavailable.rawValue {
-                    target.receive(completion: .failure(DAError.serviceUnavailable))
-                    return
-                }
-                if response.response?.statusCode == DAHTTPStatusCode.gatewayTimeout.rawValue {
-                    target.receive(completion: .failure(DAError.gatewayTimeout))
-                    return
-                }
+//                if response.response?.statusCode == DAHTTPStatusCode.internalServerError.rawValue {
+//                    target.receive(completion: .failure(DAError.internalServerError))
+//                    return
+//                }
+//                if response.response?.statusCode == DAHTTPStatusCode.badRequest.rawValue {
+//                    target.receive(completion: .failure(DAError.badRequest))
+//                    return
+//                }
+//                if response.response?.statusCode == DAHTTPStatusCode.forbidden.rawValue {
+//                    target.receive(completion: .failure(DAError.forbidden))
+//                    return
+//                }
+//                if response.response?.statusCode == DAHTTPStatusCode.notFound.rawValue {
+//                    target.receive(completion: .failure(DAError.notFound))
+//                    return
+//                }
+//                if response.response?.statusCode == DAHTTPStatusCode.badGateway.rawValue {
+//                    target.receive(completion: .failure(DAError.badGateway))
+//                    return
+//                }
+//                if response.response?.statusCode == DAHTTPStatusCode.serviceUnavailable.rawValue {
+//                    target.receive(completion: .failure(DAError.serviceUnavailable))
+//                    return
+//                }
+//                if response.response?.statusCode == DAHTTPStatusCode.gatewayTimeout.rawValue {
+//                    target.receive(completion: .failure(DAError.gatewayTimeout))
+//                    return
+//                }
                 
                 switch response.result {
                 case .success :
@@ -178,7 +178,7 @@ extension DACombineAlamofireAPI {
                     target.receive(completion: .finished)
                 case .failure(let error):
                     if error.isSessionTaskError {
-                        target.receive(completion: .failure(DAError.noInternetConnection))
+                        target.receive(completion: .failure(DAErrorModel(status: DAError.noInternetConnection, message: "No Internet Connection")))
                     } else {
                         target.receive(completion: .failure(error))
                     }
