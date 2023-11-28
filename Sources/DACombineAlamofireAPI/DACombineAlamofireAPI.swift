@@ -2,9 +2,6 @@ import Foundation
 import Combine
 import Alamofire
 
-enum DAAPIError: Combine.Error {
-    case customError(errorModel: DAErrorModel)
-}
 
 final public class DACombineAlamofireAPI: Publisher {
     
@@ -143,11 +140,13 @@ extension DACombineAlamofireAPI {
             
             self.target = nil
             request.responseData { response in
-                if response.response?.statusCode == DAHTTPStatusCode.unauthorized.rawValue {
-                    target.receive(completion: .failure(DAAPIError.customError(errorModel: DAErrorModel(status: DAError.unauthorized, message: "Unauthorized")))
-                        
-                    return
-                }
+//                if response.response?.statusCode == DAHTTPStatusCode.unauthorized.rawValue {
+////                    target.receive(completion: .failure(DAAPIError.customError(errorModel: DAErrorModel(status: DAError.unauthorized, message: "Unauthorized"))))
+////                        
+//                    _ = target.receive(response.value!)
+//                    target.receive(completion: .failure())
+//                    return
+//                }
 //                if response.response?.statusCode == DAHTTPStatusCode.internalServerError.rawValue {
 //                    target.receive(completion: .failure(DAError.internalServerError))
 //                    return
@@ -180,13 +179,13 @@ extension DACombineAlamofireAPI {
                 switch response.result {
                 case .success :
                     _ = target.receive(response.value!)
-                    target.receive(completion: .finished)
+                    target.receive(completion: .failure(DAError.other))
                 case .failure(let error):
-//                    if error.isSessionTaskError {
-//                        target.receive(completion: .failure(DAAPIError.customError(errorModel: DAErrorModel(status: DAError.noInternetConnection, message: "No Internet Connection")))
-//                    } else {
-//                            target.receive(completion: .failure(DAAPIError.customError(errorModel: DAErrorModel(status: DAError.other, message: error)))
-//                    }
+                    if error.isSessionTaskError {
+                        target.receive(completion: .failure(DAError.noInternetConnection))
+                    } else {
+                            target.receive(completion: .failure(error))
+                    }
                 }
             }
             .resume()
