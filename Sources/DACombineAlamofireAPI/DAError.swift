@@ -7,8 +7,8 @@ import Foundation
 
 
 public struct ResponseModel: Codable {
-    let status : String
-    let message : String
+    public let status : String
+    public let message : String
     
     enum CodingKeys: String, CodingKey {
         case status = "status"
@@ -17,8 +17,8 @@ public struct ResponseModel: Codable {
 }
 
 public struct DAErrorModel: Codable {
-    let status : Int
-    let message : String
+    public let status : Int
+    public let message : String
     
     init(status: Int, message: String) {
         self.status = status
