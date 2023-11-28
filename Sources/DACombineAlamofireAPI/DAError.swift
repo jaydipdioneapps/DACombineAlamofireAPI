@@ -15,6 +15,7 @@ public enum DAError: LocalizedError {
     case badGateway
     case serviceUnavailable
     case gatewayTimeout
+    case other
 
     public var errorDescription: String? {
         switch self {
@@ -36,6 +37,8 @@ public enum DAError: LocalizedError {
             return "Internal server error."
         case .noInternetConnection:
             return "Please check your internet connection and try again later."
+        case .other:
+            return ""
         }
     }
 }
