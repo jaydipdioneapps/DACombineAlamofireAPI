@@ -178,7 +178,7 @@ extension DACombineAlamofireAPI {
                 
                 switch response.result {
                 case .success :
-                    let result = checkResponse(response: response)
+                    let result = self.checkResponse(response: response)
                     if result.success {
                         _ = target.receive(response.value!)
                         target.receive(completion: .finished)
