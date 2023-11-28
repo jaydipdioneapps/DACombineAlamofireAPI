@@ -178,8 +178,15 @@ extension DACombineAlamofireAPI {
                 
                 switch response.result {
                 case .success :
-                    _ = target.receive(response.value!)
-                    target.receive(completion: .finished)
+                    let result = checkResponse(response: response)
+                    if result.success {
+                        _ = target.receive(response.value!)
+                        target.receive(completion: .finished)
+                    } else {
+                        let errorModel = DAErrorModel(status: result.statusCode, message: result.message)
+                        _ = target.receive(try! JSONEncoder().encode(errorModel))
+                        target.receive(completion: .finished)
+                    }
                 case .failure(let error):
                     if response.response?.statusCode == DAHTTPStatusCode.unauthorized.rawValue {
                         let errorModel = DAErrorModel(status: DAHTTPStatusCode.unauthorized.rawValue, message: response.error?.localizedDescription ?? "")
@@ -190,6 +197,13 @@ extension DACombineAlamofireAPI {
                 }
             }
             .resume()
+        }
+        
+        func checkResponse(response: AFDataResponse<Data>) -> (statusCode: Int, message: String, success: Bool) {
+            if response.response?.statusCode == DAHTTPStatusCode.unauthorized.rawValue {
+                return (DAHTTPStatusCode.unauthorized.rawValue, response.error?.localizedDescription ?? "", false)
+            }
+            return (DAHTTPStatusCode.accepted.rawValue, "Success", true)
         }
         
         func cancel() {
