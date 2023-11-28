@@ -140,41 +140,6 @@ extension DACombineAlamofireAPI {
             
             self.target = nil
             request.responseData { response in
-//                if response.response?.statusCode == DAHTTPStatusCode.unauthorized.rawValue {
-////                    target.receive(completion: .failure(DAAPIError.customError(errorModel: DAErrorModel(status: DAError.unauthorized, message: "Unauthorized"))))
-////                        
-//                    _ = target.receive(response.value!)
-//                    target.receive(completion: .failure())
-//                    return
-//                }
-//                if response.response?.statusCode == DAHTTPStatusCode.internalServerError.rawValue {
-//                    target.receive(completion: .failure(DAError.internalServerError))
-//                    return
-//                }
-//                if response.response?.statusCode == DAHTTPStatusCode.badRequest.rawValue {
-//                    target.receive(completion: .failure(DAError.badRequest))
-//                    return
-//                }
-//                if response.response?.statusCode == DAHTTPStatusCode.forbidden.rawValue {
-//                    target.receive(completion: .failure(DAError.forbidden))
-//                    return
-//                }
-//                if response.response?.statusCode == DAHTTPStatusCode.notFound.rawValue {
-//                    target.receive(completion: .failure(DAError.notFound))
-//                    return
-//                }
-//                if response.response?.statusCode == DAHTTPStatusCode.badGateway.rawValue {
-//                    target.receive(completion: .failure(DAError.badGateway))
-//                    return
-//                }
-//                if response.response?.statusCode == DAHTTPStatusCode.serviceUnavailable.rawValue {
-//                    target.receive(completion: .failure(DAError.serviceUnavailable))
-//                    return
-//                }
-//                if response.response?.statusCode == DAHTTPStatusCode.gatewayTimeout.rawValue {
-//                    target.receive(completion: .failure(DAError.gatewayTimeout))
-//                    return
-//                }
                 
                 switch response.result {
                 case .success :
@@ -200,7 +165,7 @@ extension DACombineAlamofireAPI {
         }
         
         func checkResponse(response: AFDataResponse<Data>) -> (statusCode: Int, message: String, success: Bool) {
-            if response.response?.statusCode == DAHTTPStatusCode.unauthorized.rawValue {
+            if response.response?.statusCode == DAHTTPStatusCode.unauthorized.rawValue || DAHTTPStatusCode.internalServerError.rawValue || DAHTTPStatusCode.badRequest.rawValue || DAHTTPStatusCode.forbidden.rawValue || DAHTTPStatusCode.notFound.rawValue || DAHTTPStatusCode.badGateway.rawValue || DAHTTPStatusCode.serviceUnavailable.rawValue || DAHTTPStatusCode.gatewayTimeout.rawValue {
                 do {
                     let eModel = try JSONDecoder().decode(ResponseModel.self, from: response.value!)
                     return (response.response?.statusCode ?? 404, eModel.message, false)
