@@ -5,7 +5,7 @@
 
 import Foundation
 
-enum DAHTTPStatusCode: Int {
+public enum DAHTTPStatusCode: Int {
     //1xx Informationals
     case `continue` = 100
     case switchingProtocols = 101
