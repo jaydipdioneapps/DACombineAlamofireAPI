@@ -44,26 +44,11 @@ public enum DAError: LocalizedError {
 }
 
 public struct DAErrorModel: Codable {
-    let error : DAErrorMessageModel
-    
-    init(error: DAErrorMessageModel) {
-        self.error = error
-    }
-    enum CodingKeys: String, CodingKey {
-        case error = "error"
-    }
-}
-
-public struct DAErrorMessageModel: Codable {
     let status : DAError
     let message : String
     
     init(status: DAError, message: String) {
         self.status = status
         self.message = message
-    }
-    enum CodingKeys: String, CodingKey {
-        case status = "status"
-        case message = "message"
     }
 }

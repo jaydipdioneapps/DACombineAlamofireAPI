@@ -182,9 +182,8 @@ extension DACombineAlamofireAPI {
                     target.receive(completion: .finished)
                 case .failure(let error):
                     if response.response?.statusCode == DAHTTPStatusCode.unauthorized.rawValue {
-                        let errorModel = DAErrorMessageModel(status: .unauthorized, message: response.error?.localizedDescription ?? "")
-                        let finalModel = DAErrorModel(error: errorModel)
-                        _ = target.receive(try! JSONEncoder().encode(finalModel))
+                        let errorModel = DAErrorModel(status: .unauthorized, message: response.error?.localizedDescription ?? "")
+                        _ = target.receive(try! JSONEncoder().encode(errorModel))
                         target.receive(completion: .finished)
                         return
                     }
