@@ -165,15 +165,18 @@ extension DACombineAlamofireAPI {
         }
         
         func checkResponse(response: AFDataResponse<Data>) -> (statusCode: Int, message: String, success: Bool) {
-            if response.response?.statusCode == DAHTTPStatusCode.unauthorized.rawValue || DAHTTPStatusCode.internalServerError.rawValue || DAHTTPStatusCode.badRequest.rawValue || DAHTTPStatusCode.forbidden.rawValue || DAHTTPStatusCode.notFound.rawValue || DAHTTPStatusCode.badGateway.rawValue || DAHTTPStatusCode.serviceUnavailable.rawValue || DAHTTPStatusCode.gatewayTimeout.rawValue {
+            switch response.response?.statusCode {
+            case DAHTTPStatusCode.unauthorized.rawValue,DAHTTPStatusCode.internalServerError.rawValue,DAHTTPStatusCode.badRequest.rawValue,DAHTTPStatusCode.forbidden.rawValue,DAHTTPStatusCode.notFound.rawValue,DAHTTPStatusCode.badGateway.rawValue,DAHTTPStatusCode.serviceUnavailable.rawValue,DAHTTPStatusCode.gatewayTimeout.rawValue:
                 do {
                     let eModel = try JSONDecoder().decode(ResponseModel.self, from: response.value!)
                     return (response.response?.statusCode ?? 404, eModel.message, false)
                 } catch {
                     return (response.response?.statusCode ?? 404, response.error?.localizedDescription ?? "", false)
                 }
+            default:
+                return (DAHTTPStatusCode.accepted.rawValue, "Success", true)
+
             }
-            return (DAHTTPStatusCode.accepted.rawValue, "Success", true)
         }
         
         func cancel() {
