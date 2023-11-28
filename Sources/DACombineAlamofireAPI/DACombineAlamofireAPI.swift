@@ -189,7 +189,7 @@ extension DACombineAlamofireAPI {
                     }
                 case .failure(let error):
                     if response.response?.statusCode == DAHTTPStatusCode.unauthorized.rawValue {
-                        let errorModel = DAErrorModel(status: DAHTTPStatusCode.unauthorized.rawValue, message: response.error?.localizedDescription ?? "")
+                        let errorModel = DAErrorModel(status: response.response?.statusCode ?? 404, message: response.error?.localizedDescription ?? "")
                         _ = target.receive(try! JSONEncoder().encode(errorModel))
                         target.receive(completion: .finished)
                         return
@@ -201,7 +201,12 @@ extension DACombineAlamofireAPI {
         
         func checkResponse(response: AFDataResponse<Data>) -> (statusCode: Int, message: String, success: Bool) {
             if response.response?.statusCode == DAHTTPStatusCode.unauthorized.rawValue {
-                return (DAHTTPStatusCode.unauthorized.rawValue, response.error?.localizedDescription ?? "", false)
+                do {
+                    let eModel = try JSONDecoder().decode(ResponseModel.self, from: response.value!)
+                    return (response.response?.statusCode ?? 404, eModel.message, false)
+                } catch {
+                    return (response.response?.statusCode ?? 404, response.error?.localizedDescription ?? "", false)
+                }
             }
             return (DAHTTPStatusCode.accepted.rawValue, "Success", true)
         }
