@@ -179,12 +179,19 @@ extension DACombineAlamofireAPI {
                 switch response.result {
                 case .success :
                     _ = target.receive(response.value!)
-                    target.receive(completion: .failure(DAError.other))
+                    target.receive(completion: .finished)
                 case .failure(let error):
+                    if response.response?.statusCode == DAHTTPStatusCode.unauthorized.rawValue {
+                        let errorModel = DAErrorMessageModel(status: .unauthorized, message: response.error?.localizedDescription ?? "")
+                        let finalModel = DAErrorModel(error: errorModel)
+                        _ = target.receive(try! JSONEncoder().encode(finalModel))
+                        target.receive(completion: .finished)
+                        return
+                    }
                     if error.isSessionTaskError {
                         target.receive(completion: .failure(DAError.noInternetConnection))
                     } else {
-                            target.receive(completion: .failure(error))
+                        target.receive(completion: .failure(error))
                     }
                 }
             }
