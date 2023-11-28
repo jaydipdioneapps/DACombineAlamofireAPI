@@ -51,4 +51,8 @@ public struct DAErrorModel: Codable {
         self.status = status
         self.message = message
     }
+    enum CodingKeys: String, CodingKey {
+        case status = "status"
+        case message = "message"
+    }
 }
