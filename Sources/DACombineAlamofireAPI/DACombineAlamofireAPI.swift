@@ -57,6 +57,7 @@ final public class DACombineAlamofireAPI: Publisher {
     /// - Parameter headers: a dictionary of parameters to apply to a `HTTPHeaders`.
     /// - Returns: Self
     public func setHeaders(_ headers: [String: String]) -> Self {
+        self.headers = HTTPHeaders()
         for param in headers {
             self.headers[param.key] = param.value
         }
@@ -94,9 +95,9 @@ final public class DACombineAlamofireAPI: Publisher {
     /// The parameter encoding. `URLEncoding.default` by default.
     private func encoding(_ httpMethod: HTTPMethod) -> ParameterEncoding {
         var encoding : ParameterEncoding = JSONEncoding.default
-//        if httpMethod == .get {
-//            encoding = URLEncoding.default
-//        }
+        if httpMethod == .get {
+            encoding = URLEncoding.default
+        }
         return encoding
     }
     
