@@ -94,9 +94,9 @@ final public class DACombineAlamofireAPI: Publisher {
     /// The parameter encoding. `URLEncoding.default` by default.
     private func encoding(_ httpMethod: HTTPMethod) -> ParameterEncoding {
         var encoding : ParameterEncoding = JSONEncoding.default
-        if httpMethod == .get {
-            encoding = URLEncoding.default
-        }
+//        if httpMethod == .get {
+//            encoding = URLEncoding.default
+//        }
         return encoding
     }
     
