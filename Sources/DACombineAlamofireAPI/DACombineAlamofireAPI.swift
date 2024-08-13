@@ -142,11 +142,15 @@ extension DACombineAlamofireAPI {
             self.target = nil
             request.responseData { response in
                 
-                debugPrint("response : \(response)")
-                debugPrint("response result : \(response.result)")
-                
                 if response.error?.isSessionTaskError ?? false {
-                    debugPrint("response result 1 : \(response.result)")
+                    if let error = response.error as NSError?, error.domain == NSURLErrorDomain {
+                        if error.code == DAHTTPStatusCode.networkConnectionLost.rawValue || error.code == DAHTTPStatusCode.noInternetConnection.rawValue {
+                            let errorModel = DAErrorModel(status: error.code, message: response.error?.localizedDescription ?? "")
+                            _ = target.receive(try! JSONEncoder().encode(errorModel))
+                            target.receive(completion: .finished)
+                            return
+                        }
+                    }
                 }
 
                 switch response.result {
@@ -161,9 +165,8 @@ extension DACombineAlamofireAPI {
                         target.receive(completion: .finished)
                     }
                 case .failure(let error):
-                    debugPrint("status code : \(response.response?.statusCode ?? 404)")
                     switch response.response?.statusCode {
-                    case DAHTTPStatusCode.unauthorized.rawValue,DAHTTPStatusCode.internalServerError.rawValue,DAHTTPStatusCode.badRequest.rawValue,DAHTTPStatusCode.forbidden.rawValue,DAHTTPStatusCode.notFound.rawValue,DAHTTPStatusCode.badGateway.rawValue,DAHTTPStatusCode.serviceUnavailable.rawValue,DAHTTPStatusCode.gatewayTimeout.rawValue,DAHTTPStatusCode.networkConnectionLost.rawValue,DAHTTPStatusCode.noInternetConnection.rawValue:
+                    case DAHTTPStatusCode.unauthorized.rawValue,DAHTTPStatusCode.internalServerError.rawValue,DAHTTPStatusCode.badRequest.rawValue,DAHTTPStatusCode.forbidden.rawValue,DAHTTPStatusCode.notFound.rawValue,DAHTTPStatusCode.badGateway.rawValue,DAHTTPStatusCode.serviceUnavailable.rawValue,DAHTTPStatusCode.gatewayTimeout.rawValue:
                         let errorModel = DAErrorModel(status: response.response?.statusCode ?? 404, message: response.error?.localizedDescription ?? "")
                         _ = target.receive(try! JSONEncoder().encode(errorModel))
                         target.receive(completion: .finished)
@@ -178,9 +181,8 @@ extension DACombineAlamofireAPI {
         }
         
         func checkResponse(response: AFDataResponse<Data>) -> (statusCode: Int, message: String, success: Bool) {
-            debugPrint("status code : \(response.response?.statusCode ?? 404)")
             switch response.response?.statusCode {
-            case DAHTTPStatusCode.unauthorized.rawValue,DAHTTPStatusCode.internalServerError.rawValue,DAHTTPStatusCode.badRequest.rawValue,DAHTTPStatusCode.forbidden.rawValue,DAHTTPStatusCode.notFound.rawValue,DAHTTPStatusCode.badGateway.rawValue,DAHTTPStatusCode.serviceUnavailable.rawValue,DAHTTPStatusCode.gatewayTimeout.rawValue,DAHTTPStatusCode.networkConnectionLost.rawValue,DAHTTPStatusCode.noInternetConnection.rawValue:
+            case DAHTTPStatusCode.unauthorized.rawValue,DAHTTPStatusCode.internalServerError.rawValue,DAHTTPStatusCode.badRequest.rawValue,DAHTTPStatusCode.forbidden.rawValue,DAHTTPStatusCode.notFound.rawValue,DAHTTPStatusCode.badGateway.rawValue,DAHTTPStatusCode.serviceUnavailable.rawValue,DAHTTPStatusCode.gatewayTimeout.rawValue:
                 do {
                     let eModel = try JSONDecoder().decode(ResponseModel.self, from: response.value!)
                     return (response.response?.statusCode ?? 404, eModel.message, false)
