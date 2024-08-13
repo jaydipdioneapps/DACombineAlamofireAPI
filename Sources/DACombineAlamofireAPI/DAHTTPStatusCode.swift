@@ -54,4 +54,5 @@ public enum DAHTTPStatusCode: Int {
     case httpVersionNotSupported = 505
     //10xx Internet Error
     case noInternetConnection = -1009
+    case networkConnectionLost = -1005
 }

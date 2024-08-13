@@ -14,7 +14,7 @@ let package = Package(
             targets: ["DACombineAlamofireAPI"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/jaydipdioneapps/DACombineAlamofireAPI", from: "1.0.0"),
+        //.package(url: "https://github.com/jaydipdioneapps/DACombineAlamofireAPI", from: "1.0.0"),
             .package(url: "https://github.com/Alamofire/Alamofire.git", from: "5.2.0")
     ],
     targets: [
