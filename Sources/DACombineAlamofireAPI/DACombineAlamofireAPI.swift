@@ -144,6 +144,10 @@ extension DACombineAlamofireAPI {
                 
                 debugPrint("response : \(response)")
                 debugPrint("response result : \(response.result)")
+                
+                if response.error?.isSessionTaskError ?? false {
+                    debugPrint("response result 1 : \(response.result)")
+                }
 
                 switch response.result {
                 case .success :
