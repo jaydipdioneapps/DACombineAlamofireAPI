@@ -142,14 +142,20 @@ extension DACombineAlamofireAPI {
             self.target = nil
             request.responseData { response in
                 
-                if response.error?.isSessionTaskError ?? false {
-                    if let error = response.error as NSError?, error.domain == NSURLErrorDomain {
-                        if error.code == DAHTTPStatusCode.networkConnectionLost.rawValue || error.code == DAHTTPStatusCode.noInternetConnection.rawValue {
-                            let errorModel = DAErrorModel(status: error.code, message: response.error?.localizedDescription ?? "")
-                            _ = target.receive(try! JSONEncoder().encode(errorModel))
-                            target.receive(completion: .finished)
-                            return
+                if let error = response.error {
+                    switch error {
+                    case .sessionTaskFailed(let sessionError):
+                        // Handle specific session errors here
+                        if let urlError = sessionError as? URLError {
+                            if urlError.code == .networkConnectionLost || urlError.code == .notConnectedToInternet {
+                                let errorModel = DAErrorModel(status: urlError.code.rawValue, message: error.localizedDescription)
+                                _ = target.receive(try! JSONEncoder().encode(errorModel))
+                                target.receive(completion: .finished)
+                                return
+                            }
                         }
+                    default:
+                        break
                     }
                 }
 
