@@ -142,6 +142,9 @@ extension DACombineAlamofireAPI {
             self.target = nil
             request.responseData { response in
                 
+                debugPrint("response : \(response)")
+                debugPrint("response result : \(response.result)")
+
                 switch response.result {
                 case .success :
                     let result = self.checkResponse(response: response)
