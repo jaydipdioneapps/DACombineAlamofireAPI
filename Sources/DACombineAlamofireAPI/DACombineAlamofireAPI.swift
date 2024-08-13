@@ -156,7 +156,7 @@ extension DACombineAlamofireAPI {
                 case .failure(let error):
                     
                     switch response.response?.statusCode {
-                    case DAHTTPStatusCode.unauthorized.rawValue,DAHTTPStatusCode.internalServerError.rawValue,DAHTTPStatusCode.badRequest.rawValue,DAHTTPStatusCode.forbidden.rawValue,DAHTTPStatusCode.notFound.rawValue,DAHTTPStatusCode.badGateway.rawValue,DAHTTPStatusCode.serviceUnavailable.rawValue,DAHTTPStatusCode.gatewayTimeout.rawValue,DAHTTPStatusCode.networkConnectionLost.rawValue:
+                    case DAHTTPStatusCode.unauthorized.rawValue,DAHTTPStatusCode.internalServerError.rawValue,DAHTTPStatusCode.badRequest.rawValue,DAHTTPStatusCode.forbidden.rawValue,DAHTTPStatusCode.notFound.rawValue,DAHTTPStatusCode.badGateway.rawValue,DAHTTPStatusCode.serviceUnavailable.rawValue,DAHTTPStatusCode.gatewayTimeout.rawValue,DAHTTPStatusCode.networkConnectionLost.rawValue,DAHTTPStatusCode.noInternetConnection.rawValue:
                         let errorModel = DAErrorModel(status: response.response?.statusCode ?? 404, message: response.error?.localizedDescription ?? "")
                         _ = target.receive(try! JSONEncoder().encode(errorModel))
                         target.receive(completion: .finished)
@@ -173,7 +173,7 @@ extension DACombineAlamofireAPI {
         func checkResponse(response: AFDataResponse<Data>) -> (statusCode: Int, message: String, success: Bool) {
             debugPrint("status code : \(response.response?.statusCode ?? 404)")
             switch response.response?.statusCode {
-            case DAHTTPStatusCode.unauthorized.rawValue,DAHTTPStatusCode.internalServerError.rawValue,DAHTTPStatusCode.badRequest.rawValue,DAHTTPStatusCode.forbidden.rawValue,DAHTTPStatusCode.notFound.rawValue,DAHTTPStatusCode.badGateway.rawValue,DAHTTPStatusCode.serviceUnavailable.rawValue,DAHTTPStatusCode.gatewayTimeout.rawValue,DAHTTPStatusCode.networkConnectionLost.rawValue:
+            case DAHTTPStatusCode.unauthorized.rawValue,DAHTTPStatusCode.internalServerError.rawValue,DAHTTPStatusCode.badRequest.rawValue,DAHTTPStatusCode.forbidden.rawValue,DAHTTPStatusCode.notFound.rawValue,DAHTTPStatusCode.badGateway.rawValue,DAHTTPStatusCode.serviceUnavailable.rawValue,DAHTTPStatusCode.gatewayTimeout.rawValue,DAHTTPStatusCode.networkConnectionLost.rawValue,DAHTTPStatusCode.noInternetConnection.rawValue:
                 do {
                     let eModel = try JSONDecoder().decode(ResponseModel.self, from: response.value!)
                     return (response.response?.statusCode ?? 404, eModel.message, false)
