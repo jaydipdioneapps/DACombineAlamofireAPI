@@ -147,7 +147,7 @@ extension DACombineAlamofireAPI {
                     case .sessionTaskFailed(let sessionError):
                         // Handle specific session errors here
                         if let urlError = sessionError as? URLError {
-                            if urlError.code.rawValue == DAHTTPStatusCode.networkConnectionLost.rawValue || urlError.code.rawValue == DAHTTPStatusCode.noInternetConnection.rawValue || urlError.code.rawValue == DAHTTPStatusCode.networkConnectionLost.rawValue {
+                            if urlError.code.rawValue == DAHTTPStatusCode.networkConnectionLost.rawValue || urlError.code.rawValue == DAHTTPStatusCode.noInternetConnection.rawValue || urlError.code.rawValue == DAHTTPStatusCode.networkRequestTimeout.rawValue {
                                 let errorModel = DAErrorModel(status: urlError.code.rawValue, message: error.localizedDescription)
                                 _ = target.receive(try! JSONEncoder().encode(errorModel))
                                 target.receive(completion: .finished)
