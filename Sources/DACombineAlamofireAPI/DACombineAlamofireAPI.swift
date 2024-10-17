@@ -32,7 +32,7 @@ final public class DACombineAlamofireAPI: Publisher {
     private(set) var headers: HTTPHeaders = ["Content-Type": "application/json"]
         
     /// `URLConvertible` value to be used as the `URLRequest`'s `URL`.
-    private(set) var url: String?
+    private(set) var url: String = ""
     
     /// `HTTPMethod` for the `URLRequest`. `.get` by default..
     private(set) var httpMethod: HTTPMethod = .get
@@ -104,7 +104,7 @@ final public class DACombineAlamofireAPI: Publisher {
     /// Subscriber for `observer` that can be used to cancel production of sequence elements and free resources.
     public func receive<S>(subscriber: S) where S : Subscriber, Failure == S.Failure, Output == S.Input {
         
-        let urlQuery = url!.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+        let urlQuery = url.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
         
         /// Creates a `DataRequest` from a `URLRequest`.
         /// Responsible for creating and managing `Request` objects, as well as their underlying `NSURLSession`.
