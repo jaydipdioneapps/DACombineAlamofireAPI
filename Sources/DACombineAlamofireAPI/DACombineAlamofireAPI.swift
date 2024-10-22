@@ -104,7 +104,12 @@ final public class DACombineAlamofireAPI: Publisher {
     /// Subscriber for `observer` that can be used to cancel production of sequence elements and free resources.
     public func receive<S>(subscriber: S) where S : Subscriber, Failure == S.Failure, Output == S.Input {
         
-        let urlQuery = url.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+        guard let urlQuery = url.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
+            // Handle the error, such as by throwing an exception or logging it
+            debugPrint("Error: Invalid URL or unable to percent encode")
+            subscriber.receive(completion: .failure(URLError(.badURL)))
+            return
+        }
         
         /// Creates a `DataRequest` from a `URLRequest`.
         /// Responsible for creating and managing `Request` objects, as well as their underlying `NSURLSession`.
