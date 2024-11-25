@@ -56,4 +56,5 @@ public enum DAHTTPStatusCode: Int {
     case noInternetConnection = -1009
     case networkConnectionLost = -1005
     case networkRequestTimeout = -1001
+    case serverError = -1004
 }

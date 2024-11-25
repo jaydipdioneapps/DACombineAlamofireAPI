@@ -152,7 +152,7 @@ extension DACombineAlamofireAPI {
                     case .sessionTaskFailed(let sessionError):
                         // Handle specific session errors here
                         if let urlError = sessionError as? URLError {
-                            if urlError.code.rawValue == DAHTTPStatusCode.networkConnectionLost.rawValue || urlError.code.rawValue == DAHTTPStatusCode.noInternetConnection.rawValue || urlError.code.rawValue == DAHTTPStatusCode.networkRequestTimeout.rawValue {
+                            if urlError.code.rawValue == DAHTTPStatusCode.networkConnectionLost.rawValue || urlError.code.rawValue == DAHTTPStatusCode.noInternetConnection.rawValue || urlError.code.rawValue == DAHTTPStatusCode.networkRequestTimeout.rawValue || urlError.code.rawValue == DAHTTPStatusCode.serverError.rawValue {
                                 let errorModel = DAErrorModel(status: urlError.code.rawValue, message: error.localizedDescription)
                                 _ = target.receive(try! JSONEncoder().encode(errorModel))
                                 target.receive(completion: .finished)
@@ -177,7 +177,7 @@ extension DACombineAlamofireAPI {
                     }
                 case .failure(let error):
                     switch response.response?.statusCode {
-                    case DAHTTPStatusCode.unauthorized.rawValue,DAHTTPStatusCode.internalServerError.rawValue,DAHTTPStatusCode.badRequest.rawValue,DAHTTPStatusCode.forbidden.rawValue,DAHTTPStatusCode.notFound.rawValue,DAHTTPStatusCode.badGateway.rawValue,DAHTTPStatusCode.serviceUnavailable.rawValue,DAHTTPStatusCode.gatewayTimeout.rawValue:
+                    case DAHTTPStatusCode.unauthorized.rawValue,DAHTTPStatusCode.internalServerError.rawValue,DAHTTPStatusCode.badRequest.rawValue,DAHTTPStatusCode.forbidden.rawValue,DAHTTPStatusCode.notFound.rawValue,DAHTTPStatusCode.badGateway.rawValue,DAHTTPStatusCode.serviceUnavailable.rawValue,DAHTTPStatusCode.gatewayTimeout.rawValue, DAHTTPStatusCode.serverError.rawValue:
                         let errorModel = DAErrorModel(status: response.response?.statusCode ?? 404, message: response.error?.localizedDescription ?? "")
                         _ = target.receive(try! JSONEncoder().encode(errorModel))
                         target.receive(completion: .finished)
