@@ -9,7 +9,7 @@ final public class DACombineAlamofireAPI: Publisher {
     public static let shared = DACombineAlamofireAPI()
     
     /// It's private for subclassing
-    private init() {}
+    init() {}
     
     // MARK: Types
     
