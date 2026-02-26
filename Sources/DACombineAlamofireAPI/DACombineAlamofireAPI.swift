@@ -131,7 +131,7 @@ final public class DACombineAlamofireAPI: Publisher {
         }
     }
     
-    func cancelRequest() {
+    public func cancelRequest() {
         currentRequest?.cancel()
     }
     
