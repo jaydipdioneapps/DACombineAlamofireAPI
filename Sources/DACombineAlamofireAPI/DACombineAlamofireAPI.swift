@@ -40,6 +40,8 @@ final public class DACombineAlamofireAPI: Publisher {
     /// `Param` (a.k.a. `[String: Any]`) value to be encoded into the `URLRequest`. `nil` by default..
     private(set) var param: [String: Any]?
     
+    var currentRequest: DataRequest? = nil
+    
          
     // MARK: - Initializer
     
@@ -113,7 +115,7 @@ final public class DACombineAlamofireAPI: Publisher {
         
         /// Creates a `DataRequest` from a `URLRequest`.
         /// Responsible for creating and managing `Request` objects, as well as their underlying `NSURLSession`.
-        let request = sessionManager.request(urlQuery,
+        currentRequest = sessionManager.request(urlQuery,
                                              method: httpMethod,
                                              parameters: param,
                                              encoding: self.encoding(httpMethod),
@@ -124,8 +126,15 @@ final public class DACombineAlamofireAPI: Publisher {
                 debugPrint("")
             }*/
             
-        subscriber.receive(subscription: Subscription(request: request, target: subscriber))
+        if let request = currentRequest {
+            subscriber.receive(subscription: Subscription(request: request, target: subscriber))
+        }
     }
+    
+    func cancelRequest() {
+        currentRequest?.cancel()
+    }
+    
 }
 
 extension DACombineAlamofireAPI {
