@@ -2,223 +2,222 @@ import Foundation
 import Combine
 import Alamofire
 
-
 final public class DACombineAlamofireAPI: Publisher {
-    
-    /// `Singleton` variable of API class
+
     public static let shared = DACombineAlamofireAPI()
-    
-    /// It's private for subclassing
     init() {}
-    
-    // MARK: Types
-    
-    /// The response of data type.
+
     public typealias Output = Data
     public typealias Failure = Error
-    
-    // MARK: - Properties
-    
-    /// `Session` creates and manages Alamofire's `Request` types during their lifetimes. It also provides common
-    /// functionality for all `Request`s, including queuing, interception, trust management, redirect handling, and response
-    /// cache handling.
+
     private(set) var sessionManager: Session = {
         let configuration = URLSessionConfiguration.default
         configuration.timeoutIntervalForRequest = 1200.0
         return Alamofire.Session(configuration: configuration)
     }()
-    
-    /// `HTTPHeaders` value to be added to the `URLRequest`. Set `["Content-Type": "application/json"]` by default..
+
     private(set) var headers: HTTPHeaders = ["Content-Type": "application/json"]
-        
-    /// `URLConvertible` value to be used as the `URLRequest`'s `URL`.
     private(set) var url: String = ""
-    
-    /// `HTTPMethod` for the `URLRequest`. `.get` by default..
     private(set) var httpMethod: HTTPMethod = .get
-    
-    /// `Param` (a.k.a. `[String: Any]`) value to be encoded into the `URLRequest`. `nil` by default..
     private(set) var param: [String: Any]?
-    
-    var currentRequest: DataRequest? = nil
-    
-         
-    // MARK: - Initializer
-    
-    /// Set param
-    ///
-    /// - Parameter sessionManager: `Session` creates and manages Alamofire's `Request` types during their lifetimes.
-    /// - Returns: Self
+
+    private let requestLock = NSLock()
+    private var _currentRequest: DataRequest?
+    var currentRequest: DataRequest? {
+        get { requestLock.lock(); defer { requestLock.unlock() }; return _currentRequest }
+        set { requestLock.lock(); defer { requestLock.unlock() }; _currentRequest = newValue }
+    }
+
     public func setSessionManager(_ sessionManager: Session) -> Self {
         self.sessionManager = sessionManager
         return self
     }
-    
-    /// Set param
-    ///
-    /// - Parameter headers: a dictionary of parameters to apply to a `HTTPHeaders`.
-    /// - Returns: Self
+
     public func setHeaders(_ headers: [String: String]) -> Self {
         self.headers = HTTPHeaders()
-        for param in headers {
-            self.headers[param.key] = param.value
-        }
+        for param in headers { self.headers[param.key] = param.value }
         return self
     }
-    
-    /// Set url
-    ///
-    /// - Parameter apiUrl: URL to set for api request
-    /// - Returns: Self
+
     public func setURL(_ url: String) -> Self {
         self.url = url
         return self
     }
-    
-    /// Set httpMethod
-    ///
-    /// - Parameter httpMethod: to change as get, post, put, delete etc..
-    /// - Returns: Self
+
     public func setHttpMethod(_ httpMethod: HTTPMethod) -> Self {
         self.httpMethod = httpMethod
         return self
     }
-    
-    /// Set param
-    ///
-    /// - Parameter param: a dictionary of parameters to apply to a `URLRequest`.
-    /// - Returns: Self
-    public func setParameter(_ param: [String:Any]) -> Self {
+
+    public func setParameter(_ param: [String: Any]) -> Self {
         self.param = param
         return self
     }
-    
-    
-    /// The parameter encoding. `URLEncoding.default` by default.
+
     private func encoding(_ httpMethod: HTTPMethod) -> ParameterEncoding {
-        var encoding : ParameterEncoding = JSONEncoding.default
-        if httpMethod == .get {
-            encoding = URLEncoding.default
-        }
-        return encoding
+        return httpMethod == .get ? URLEncoding.default : JSONEncoding.default
     }
-    
-    /// Subscriber for `observer` that can be used to cancel production of sequence elements and free resources.
-    public func receive<S>(subscriber: S) where S : Subscriber, Failure == S.Failure, Output == S.Input {
-        
+
+    public func receive<S>(subscriber: S)
+        where S: Subscriber, Failure == S.Failure, Output == S.Input {
+
         guard let urlQuery = url.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
-            // Handle the error, such as by throwing an exception or logging it
-            debugPrint("Error: Invalid URL or unable to percent encode")
             subscriber.receive(completion: .failure(URLError(.badURL)))
             return
         }
-        
-        /// Creates a `DataRequest` from a `URLRequest`.
-        /// Responsible for creating and managing `Request` objects, as well as their underlying `NSURLSession`.
-        currentRequest = sessionManager.request(urlQuery,
-                                             method: httpMethod,
-                                             parameters: param,
-                                             encoding: self.encoding(httpMethod),
-                                             headers: self.headers)
-            /*.cURLDescription { description in
-                debugPrint(" cURL Request ")
-                debugPrint(description)
-                debugPrint("")
-            }*/
-            
-        if let request = currentRequest {
-            subscriber.receive(subscription: Subscription(request: request, target: subscriber))
-        }
+
+        let dataRequest = sessionManager.request(
+            urlQuery,
+            method: httpMethod,
+            parameters: param,
+            encoding: self.encoding(httpMethod),
+            headers: self.headers
+        )
+
+        self.currentRequest = dataRequest
+
+        let subscription = Subscription(request: dataRequest, target: subscriber)
+        subscriber.receive(subscription: subscription)
     }
-    
+
     public func cancelRequest() {
         currentRequest?.cancel()
     }
-    
 }
 
 extension DACombineAlamofireAPI {
-    // MARK: - Subscription -
-    private final class Subscription<Target: Subscriber>: Combine.Subscription where Target.Input == Output, Target.Failure == Failure {
+
+    private final class Subscription<Target: Subscriber>: Combine.Subscription
+        where Target.Input == Output, Target.Failure == Failure {
+
+        private let lock = NSLock()
         private var target: Target?
         private let request: DataRequest
-        
+        private var isCancelled = false
+
         init(request: DataRequest, target: Target) {
             self.request = request
             self.target = target
         }
-        
+
         func request(_ demand: Subscribers.Demand) {
             assert(demand > 0)
 
-            guard let target = target else { return }
-            
-            self.target = nil
-            request.responseData { response in
-                
+            lock.lock()
+            let capturedTarget = target
+            lock.unlock()
+
+            guard let target = capturedTarget else { return }
+
+            request.responseData { [weak self] response in
+                guard let self = self else { return }
+
+                self.lock.lock()
+                let cancelled = self.isCancelled
+                self.lock.unlock()
+                guard !cancelled else { return }
+
                 if let error = response.error {
-                    switch error {
-                    case .sessionTaskFailed(let sessionError):
-                        // Handle specific session errors here
-                        if let urlError = sessionError as? URLError {
-                            if urlError.code.rawValue == DAHTTPStatusCode.networkConnectionLost.rawValue || urlError.code.rawValue == DAHTTPStatusCode.noInternetConnection.rawValue || urlError.code.rawValue == DAHTTPStatusCode.networkRequestTimeout.rawValue || urlError.code.rawValue == DAHTTPStatusCode.serverError.rawValue {
-                                let errorModel = DAErrorModel(status: urlError.code.rawValue, message: error.localizedDescription)
-                                _ = target.receive(try! JSONEncoder().encode(errorModel))
-                                target.receive(completion: .finished)
-                                return
-                            }
+                    if case .sessionTaskFailed(let sessionError) = error,
+                       let urlError = sessionError as? URLError {
+                        let codes: [Int] = [
+                            DAHTTPStatusCode.networkConnectionLost.rawValue,
+                            DAHTTPStatusCode.noInternetConnection.rawValue,
+                            DAHTTPStatusCode.networkRequestTimeout.rawValue,
+                            DAHTTPStatusCode.serverError.rawValue
+                        ]
+                        if codes.contains(urlError.code.rawValue) {
+                            self.deliver(
+                                errorStatus: urlError.code.rawValue,
+                                message: error.localizedDescription,
+                                to: target
+                            )
+                            return
                         }
-                    default:
-                        break
                     }
                 }
 
                 switch response.result {
-                case .success :
+                case .success:
                     let result = self.checkResponse(response: response)
-                    if result.success {
-                        _ = target.receive(response.value!)
+                    if result.success, let value = response.value {
+                        _ = target.receive(value)
                         target.receive(completion: .finished)
                     } else {
-                        let errorModel = DAErrorModel(status: result.statusCode, message: result.message)
-                        _ = target.receive(try! JSONEncoder().encode(errorModel))
-                        target.receive(completion: .finished)
+                        self.deliver(
+                            errorStatus: result.statusCode,
+                            message: result.message,
+                            to: target
+                        )
                     }
-                case .failure(let error):
-                    switch response.response?.statusCode {
-                    case DAHTTPStatusCode.unauthorized.rawValue,DAHTTPStatusCode.internalServerError.rawValue,DAHTTPStatusCode.badRequest.rawValue,DAHTTPStatusCode.forbidden.rawValue,DAHTTPStatusCode.notFound.rawValue,DAHTTPStatusCode.badGateway.rawValue,DAHTTPStatusCode.serviceUnavailable.rawValue,DAHTTPStatusCode.gatewayTimeout.rawValue, DAHTTPStatusCode.serverError.rawValue:
-                        let errorModel = DAErrorModel(status: response.response?.statusCode ?? 404, message: response.error?.localizedDescription ?? "")
-                        _ = target.receive(try! JSONEncoder().encode(errorModel))
-                        target.receive(completion: .finished)
-                        return
-                    default:
-                        return
 
+                case .failure:
+                    let statusCode = response.response?.statusCode ?? 404
+                    let errorCodes = [
+                        DAHTTPStatusCode.unauthorized.rawValue,
+                        DAHTTPStatusCode.internalServerError.rawValue,
+                        DAHTTPStatusCode.badRequest.rawValue,
+                        DAHTTPStatusCode.forbidden.rawValue,
+                        DAHTTPStatusCode.notFound.rawValue,
+                        DAHTTPStatusCode.badGateway.rawValue,
+                        DAHTTPStatusCode.serviceUnavailable.rawValue,
+                        DAHTTPStatusCode.gatewayTimeout.rawValue,
+                        DAHTTPStatusCode.serverError.rawValue
+                    ]
+                    if errorCodes.contains(statusCode) {
+                        self.deliver(
+                            errorStatus: statusCode,
+                            message: response.error?.localizedDescription ?? "",
+                            to: target
+                        )
                     }
                 }
+
+                self.lock.lock()
+                self.target = nil
+                self.lock.unlock()
             }
             .resume()
         }
-        
-        func checkResponse(response: AFDataResponse<Data>) -> (statusCode: Int, message: String, success: Bool) {
-            switch response.response?.statusCode {
-            case DAHTTPStatusCode.unauthorized.rawValue,DAHTTPStatusCode.internalServerError.rawValue,DAHTTPStatusCode.badRequest.rawValue,DAHTTPStatusCode.forbidden.rawValue,DAHTTPStatusCode.notFound.rawValue,DAHTTPStatusCode.badGateway.rawValue,DAHTTPStatusCode.serviceUnavailable.rawValue,DAHTTPStatusCode.gatewayTimeout.rawValue:
-                do {
-                    let eModel = try JSONDecoder().decode(ResponseModel.self, from: response.value!)
-                    return (response.response?.statusCode ?? 404, eModel.message, false)
-                } catch {
-                    return (response.response?.statusCode ?? 404, response.error?.localizedDescription ?? "", false)
-                }
-            default:
-                return (DAHTTPStatusCode.accepted.rawValue, "Success", true)
 
+        private func deliver(errorStatus: Int, message: String, to target: Target) {
+            let errorModel = DAErrorModel(status: errorStatus, message: message)
+            if let encoded = try? JSONEncoder().encode(errorModel) {
+                _ = target.receive(encoded)
             }
+            target.receive(completion: .finished)
         }
-        
+
+        private func checkResponse(
+            response: AFDataResponse<Data>
+        ) -> (statusCode: Int, message: String, success: Bool) {
+            let errorCodes = [
+                DAHTTPStatusCode.unauthorized.rawValue,
+                DAHTTPStatusCode.internalServerError.rawValue,
+                DAHTTPStatusCode.badRequest.rawValue,
+                DAHTTPStatusCode.forbidden.rawValue,
+                DAHTTPStatusCode.notFound.rawValue,
+                DAHTTPStatusCode.badGateway.rawValue,
+                DAHTTPStatusCode.serviceUnavailable.rawValue,
+                DAHTTPStatusCode.gatewayTimeout.rawValue
+            ]
+            guard let statusCode = response.response?.statusCode,
+                  errorCodes.contains(statusCode) else {
+                return (DAHTTPStatusCode.accepted.rawValue, "Success", true)
+            }
+            if let data = response.value,
+               let eModel = try? JSONDecoder().decode(ResponseModel.self, from: data) {
+                return (statusCode, eModel.message, false)
+            }
+            return (statusCode, response.error?.localizedDescription ?? "", false)
+        }
+
         func cancel() {
-            request.cancel()
+            lock.lock()
+            isCancelled = true
             target = nil
+            lock.unlock()
+            request.cancel()
         }
     }
 }
-
