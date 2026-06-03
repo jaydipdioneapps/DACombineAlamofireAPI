@@ -61,17 +61,29 @@ final public class DACombineAlamofireAPI: Publisher {
     public func receive<S>(subscriber: S)
         where S: Subscriber, Failure == S.Failure, Output == S.Input {
 
-        guard let urlQuery = url.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
+        let localURL = self.url
+        let localMethod = self.httpMethod
+        let localParam = self.param
+        let localHeaders = self.headers
+        let localSession = self.sessionManager
+
+        guard let urlQuery = localURL.addingPercentEncoding(
+            withAllowedCharacters: .urlQueryAllowed
+        ) else {
             subscriber.receive(completion: .failure(URLError(.badURL)))
             return
         }
 
-        let dataRequest = sessionManager.request(
+        let encoding: ParameterEncoding = localMethod == .get
+            ? URLEncoding.default
+            : JSONEncoding.default
+
+        let dataRequest = localSession.request(
             urlQuery,
-            method: httpMethod,
-            parameters: param,
-            encoding: self.encoding(httpMethod),
-            headers: self.headers
+            method: localMethod,
+            parameters: localParam,
+            encoding: encoding,
+            headers: localHeaders
         )
 
         self.currentRequest = dataRequest
