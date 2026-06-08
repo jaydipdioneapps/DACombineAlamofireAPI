@@ -5,7 +5,7 @@ import Alamofire
 final public class DACombineAlamofireAPI: Publisher {
 
     public static let shared = DACombineAlamofireAPI()
-    init() {}
+    public init() {}
 
     public typealias Output = Data
     public typealias Failure = Error
