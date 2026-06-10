@@ -66,6 +66,11 @@ final public class DACombineAlamofireAPI: Publisher {
         let localParam = self.param
         let localHeaders = self.headers
         let localSession = self.sessionManager
+            
+            guard !localURL.isEmpty else {
+                subscriber.receive(completion: .failure(URLError(.badURL)))
+                return
+            }
 
         guard let urlQuery = localURL.addingPercentEncoding(
             withAllowedCharacters: .urlQueryAllowed
